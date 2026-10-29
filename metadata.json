@@ -1,0 +1,8 @@
+{
+  "name": "VibeForge — Твори с AI",
+  "description": "Профессиональный образовательный лендинг курса по Vibe Coding — разработке веб-приложений и MVP с искусственным интеллектом.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

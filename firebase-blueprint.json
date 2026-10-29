@@ -1,0 +1,78 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "User ID", "maxLength": 128 },
+        "email": { "type": "string", "description": "User email address", "maxLength": 256 },
+        "displayName": { "type": "string", "description": "User display name", "maxLength": 128 },
+        "photoURL": { "type": "string", "description": "User photo URL", "maxLength": 1024 },
+        "createdAt": { "type": "string", "description": "Creation timestamp", "maxLength": 64 }
+      },
+      "required": ["id", "email", "createdAt"]
+    },
+    "Application": {
+      "title": "Application",
+      "description": "Course enrollment application",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Application ID", "maxLength": 128 },
+        "userId": { "type": "string", "description": "Owner user ID", "maxLength": 128 },
+        "email": { "type": "string", "description": "Applicant email", "maxLength": 256 },
+        "name": { "type": "string", "description": "Applicant name", "maxLength": 128 },
+        "track": { "type": "string", "description": "Selected learning track", "maxLength": 64 },
+        "comment": { "type": "string", "description": "Optional notes or project idea", "maxLength": 2048 },
+        "status": { "type": "string", "description": "Status of the application", "maxLength": 32 },
+        "createdAt": { "type": "string", "description": "Creation timestamp", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "email", "name", "track", "status", "createdAt"]
+    },
+    "SavedModule": {
+      "title": "SavedModule",
+      "description": "User bookmarked or tracked curriculum module",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Record ID", "maxLength": 128 },
+        "userId": { "type": "string", "description": "Owner user ID", "maxLength": 128 },
+        "moduleId": { "type": "number", "description": "Module number 1 to 6" },
+        "savedAt": { "type": "string", "description": "Timestamp", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "moduleId", "savedAt"]
+    },
+    "MvpProject": {
+      "title": "MvpProject",
+      "description": "Saved AI-generated MVP concept and spec",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Project ID", "maxLength": 128 },
+        "userId": { "type": "string", "description": "Owner user ID", "maxLength": 128 },
+        "title": { "type": "string", "description": "Project title", "maxLength": 256 },
+        "concept": { "type": "string", "description": "Original user concept", "maxLength": 2048 },
+        "techStack": { "type": "string", "description": "Recommended stack", "maxLength": 1024 },
+        "starterPrompt": { "type": "string", "description": "Starter Vibe Coding prompt", "maxLength": 4096 },
+        "createdAt": { "type": "string", "description": "Creation timestamp", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "title", "concept", "techStack", "starterPrompt", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document accessible only by the user"
+    },
+    "/applications/{applicationId}": {
+      "schema": "Application",
+      "description": "Course enrollment applications"
+    },
+    "/saved_modules/{savedModuleId}": {
+      "schema": "SavedModule",
+      "description": "Bookmarked curriculum modules per user"
+    },
+    "/mvp_projects/{projectId}": {
+      "schema": "MvpProject",
+      "description": "Saved MVP specifications generated with Gemini"
+    }
+  }
+}

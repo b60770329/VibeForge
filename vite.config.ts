@@ -1,10 +1,65 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import fs from 'fs';
 import { defineConfig, Plugin } from 'vite';
 import 'dotenv/config';
 import { GoogleGenAI } from '@google/genai';
+
+// Clean, compact, authoritative knowledge base from ПРОГРАММА.md
+const COURSE_KNOWLEDGE_BASE = `
+Паспорт курса «Вайб-кодинг: от идеи до работающего MVP»:
+- Назначение: Практический курс для новичков, предпринимателей и специалистов без опыта кодинга.
+- Главная цель: Самостоятельно создать и опубликовать рабочий MVP по собственной идее (интерфейс, бизнес-логика, база данных, авторизация, внешний API, тесты, публичный URL).
+- Ключевой принцип: «ИИ пишет код, студент отвечает за результат». Практика важнее теории, переносимые навыки, проверяемый результат.
+- Параметры: Продолжительность 6–8 недель, нагрузка 4–6 часов в неделю, общий объем 24–48 часов практики.
+- 3 обязательных проектных этапа:
+  1. Мини-проект: освоение короткого цикла разработки с ИИ, простой интерфейс, 1 рабочий сценарий, проверка и публикация.
+  2. Приложение с данными: интеграция основных компонентов (интерфейс, БД с сохранением/чтением, авторизация, внешний API).
+  3. Итоговый MVP: продукт по собственной идее (четкая проблема и ЦА, один сквозной сценарий от начала до конца, БД, Auth, API, проверка тестами, публичный деплой).
+- 6 модулей программы:
+  1. Вайб-кодинг и подготовка среды (идея, PRD, User Story Map, безопасная работа с данными).
+  2. Постановка задач ИИ и первый мини-проект (декомпозиция, генерация интерфейса, итерации).
+  3. Основы кода и отладка (структура приложения, чтение изменений, исправление ошибок малыми шагами).
+  4. Проектирование приложения с данными (модели данных, NoSQL/Firestore, CRUD операции, валидация).
+  5. Авторизация и внешние API (Google Auth, сессии, REST API / Gemini API, обработка ошибок).
+  6. Тестирование, деплой и защита (E2E сценарии, автоматические проверки, Cloud Run / Vercel, чек-лист).
+- Тарифы и условия: Базовый сценарий строится на бесплатных тарифах сервисов. Модель оплаты курса — платная (ценовой сегмент уточняется). Решение о сертификации пока обсуждается.
+`;
+
+async function callWithRetry<T>(fn: () => Promise<T>, retries = 2, delayMs = 300): Promise<T> {
+  let lastError: any;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastError = err;
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, delayMs * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError;
+}
+
+function getFallbackMentorAnswer(query: string): string {
+  const q = (query || '').toLowerCase();
+  if (q.includes('создам') || q.includes('проект') || q.includes('mvp') || q.includes('результат')) {
+    return 'На курсе вы создадите 3 проекта:\n• Мини-проект: первый рабочий интерфейс и сценарий;\n• Приложение с данными: подключение базы данных, авторизации и внешнего API;\n• Итоговый MVP: полноценный веб-продукт по вашей идее, развёрнутый по публичной ссылке.';
+  }
+  if (q.includes('кодить') || q.includes('опыт') || q.includes('новичок') || q.includes('программирован') || q.includes('сложно')) {
+    return 'Предварительный опыт программирования не нужен! Курс построен на принципах вайб-кодинга: ИИ генерирует код, а вы учитесь формулировать задачи, проверять результаты и управлять архитектурой.';
+  }
+  if (q.includes('график') || q.includes('срок') || q.includes('длительн') || q.includes('недел') || q.includes('время') || q.includes('часов') || q.includes('нагрузк')) {
+    return 'Курс рассчитан на 6–8 недель самостоятельного прохождения с рекомендуемой нагрузкой 4–6 часов в неделю (всего 24–48 часов практики). Вы можете учиться в удобном для вас темпе.';
+  }
+  if (q.includes('цен') || q.includes('стоимост') || q.includes('скольк') || q.includes('плат')) {
+    return 'Курс планируется платным, точный ценовой сегмент сейчас финализируется. При этом сам учебный процесс строится на бесплатных тарифах AI-сервисов и облачных платформ.';
+  }
+  if (q.includes('сертифик')) {
+    return 'Решение о сертификации в текущей версии программы ещё не утверждено: главный акцент сделан на реальный осязаемый результат — работающий и опубликованный MVP в вашем портфолио.';
+  }
+  return 'Курс VibeForge обучает созданию полноценных веб-приложений и MVP с помощью AI за 6–8 недель практики. Вы научитесь управлять искусственным интеллектом, проектировать базы данных и развертывать готовые продукты.';
+}
 
 function geminiApiPlugin(): Plugin {
   return {
@@ -76,23 +131,25 @@ function geminiApiPlugin(): Plugin {
 
 Верни ТОЛЬКО валидный JSON без кавычек markdown.`;
 
-              const response = await ai.models.generateContent({
-                model: 'gemini-3.8-flash',
-                contents: prompt,
-                config: {
-                  responseMimeType: 'application/json',
-                },
-              });
+              const response = await callWithRetry(() =>
+                ai.models.generateContent({
+                  model: 'gemini-3.8-flash',
+                  contents: prompt,
+                  config: {
+                    responseMimeType: 'application/json',
+                  },
+                })
+              );
 
               res.statusCode = 200;
               res.setHeader('Content-Type', 'application/json');
               res.end(response.text || '{}');
             } catch (err: any) {
-              console.error('Gemini Generation Error:', err);
+              console.warn('Gemini Generation transient fallback:', err?.message);
               res.statusCode = 500;
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ 
-                error: err.message || 'Ошибка генерации спецификации MVP через Gemini'
+                error: err?.message || 'Ошибка генерации спецификации MVP через Gemini'
               }));
             }
           });
@@ -106,25 +163,15 @@ function geminiApiPlugin(): Plugin {
             body += chunk;
           });
           req.on('end', async () => {
+            let messageText = '';
             try {
-              const { message, history } = JSON.parse(body || '{}');
-
-              // Load program markdown knowledge
-              const programPath = path.resolve(__dirname, 'public/assets/aistudio/__________6d627d73.md');
-              let programContent = '';
-              try {
-                if (fs.existsSync(programPath)) {
-                  programContent = fs.readFileSync(programPath, 'utf-8');
-                }
-              } catch (readErr) {
-                console.warn('Could not read program markdown file, proceeding with embedded summary:', readErr);
-              }
-
+              const parsed = JSON.parse(body || '{}');
+              messageText = parsed.message || '';
+              const history = parsed.history;
               const apiKey = process.env.GEMINI_API_KEY;
 
               if (!apiKey) {
-                // Graceful fallback for chat assistant
-                const reply = getFallbackMentorAnswer(message);
+                const reply = getFallbackMentorAnswer(messageText);
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify({ reply }));
@@ -143,20 +190,7 @@ function geminiApiPlugin(): Plugin {
               const systemInstruction = `Ты — AI-наставник курса VibeForge («Вайб-кодинг: от идеи до работающего MVP»). Твоя задача — отвечать на вопросы потенциальных студентов ТОЛЬКО на основе предоставленной базы знаний программы курса.
 
 База знаний программы:
-${programContent || `
-Курс: "Вайб-кодинг: от идеи до работающего MVP"
-Формат: 6-8 недель, нагрузка 4-6 часов в неделю, 24-48 часов практики.
-Аудитория: новички, предприниматели, специалисты без опыта кодинга.
-Ключевой результат: собственный опубликованный MVP с интерфейсом, логикой, базой данных, авторизацией и внешним API.
-3 обязательных проекта:
-1. Мини-проект (короткий цикл разработки, интерфейс, 1 сценарий, публикация).
-2. Приложение с данными (интерфейс, БД с сохранением/чтением, авторизация, внешний API).
-3. Итоговый MVP (проблема, аудитория, главный сквозной сценарий, БД, Auth, API, прохождение тестов, публичный адрес).
-Принцип: ИИ пишет код, а студент учится проверять результат и управлять процессом.
-Модель оплаты: платный курс, ценовой сегмент и точная стоимость ещё не утверждены.
-Сертификация: решение пока не принято.
-Бесплатный сценарий: базовый процесс строится на бесплатных тарифах сервисов.
-`}
+${COURSE_KNOWLEDGE_BASE}
 
 Правила:
 1. Отвечай кратко, до 3-4 предложений. Используй маркированные списки, если перечисляешь пункты.
@@ -165,10 +199,9 @@ ${programContent || `
 4. Если вопрос выходит за рамки курса (например, "напиши мне код прямо сейчас", нерелевантные темы) — вежливо отказывай и возвращай к темам и программе курса.
 5. Соблюдай точность: не обещай золотые горы, придерживайся программы. Отвечай дружелюбно и профессионально на русском языке.`;
 
-              // Format conversation contents
               const contents: any[] = [];
               if (Array.isArray(history) && history.length > 0) {
-                for (const turn of history.slice(-6)) {
+                for (const turn of history.slice(-4)) {
                   contents.push({
                     role: turn.role === 'model' ? 'model' : 'user',
                     parts: [{ text: turn.text || '' }],
@@ -177,26 +210,26 @@ ${programContent || `
               }
               contents.push({
                 role: 'user',
-                parts: [{ text: message || 'Расскажи о курсе' }],
+                parts: [{ text: messageText || 'Расскажи о курсе' }],
               });
 
-              const response = await ai.models.generateContent({
-                model: 'gemini-3.8-flash',
-                contents,
-                config: {
-                  systemInstruction,
-                },
-              });
+              const response = await callWithRetry(() =>
+                ai.models.generateContent({
+                  model: 'gemini-3.8-flash',
+                  contents,
+                  config: {
+                    systemInstruction,
+                  },
+                })
+              );
 
-              const text = response.text || 'Курс обучает полному циклу создания MVP с помощью AI за 6–8 недель практики.';
+              const text = response.text || getFallbackMentorAnswer(messageText);
               res.statusCode = 200;
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ reply: text }));
             } catch (err: any) {
-              console.error('Gemini Chat Assistant Error:', err);
-              // Fallback answer based on keywords
-              const bodyParsed = JSON.parse(body || '{}');
-              const reply = getFallbackMentorAnswer(bodyParsed.message || '');
+              console.warn('Gemini chat assistant fallback applied due to network state:', err?.message);
+              const reply = getFallbackMentorAnswer(messageText);
               res.statusCode = 200;
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ reply }));
@@ -209,20 +242,6 @@ ${programContent || `
       });
     },
   };
-}
-
-function getFallbackMentorAnswer(query: string): string {
-  const q = (query || '').toLowerCase();
-  if (q.includes('создам') || q.includes('проект') || q.includes('mvp') || q.includes('результат')) {
-    return 'На курсе вы пройдете через 3 проектных этапа:\n• Мини-проект: первый рабочий интерфейс и сценарий;\n• Приложение с данными: подключение базы данных, авторизации и внешнего API;\n• Итоговый MVP: полноценный веб-продукт по вашей идее, развёрнутый по публичной ссылке.';
-  }
-  if (q.includes('кодить') || q.includes('опыт') || q.includes('новичок') || q.includes('программирован')) {
-    return 'Предварительный опыт программирования не требуется! Курс построен на принципах вайб-кодинга: ИИ генерирует код, а вы учитесь формулировать задачи, проверять результаты и управлять архитектурой.';
-  }
-  if (q.includes('график') || q.includes('срок') || q.includes('длительн') || q.includes('недел') || q.includes('время') || q.includes('часов')) {
-    return 'Курс рассчитан на 6–8 недель самостоятельного прохождения с рекомендуемой нагрузкой 4–6 часов в неделю (всего 24–48 часов практики). Вы можете учиться в удобном для вас темпе.';
-  }
-  return 'Курс VibeForge обучает созданию полноценных веб-приложений и MVP с помощью AI за 6–8 недель практики. Вы научитесь управлять искусственным интеллектом, проектировать базы данных и развертывать готовые продукты.';
 }
 
 export default defineConfig(() => {

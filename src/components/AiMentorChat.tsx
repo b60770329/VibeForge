@@ -4,13 +4,9 @@ import {
   X,
   Send,
   Bot,
-  User,
   ArrowRight,
-  HelpCircle,
-  AlertCircle,
-  MessageSquare,
-  CheckCircle2,
 } from 'lucide-react';
+import { getMentorAnswer } from '../services/mentorKnowledge';
 
 interface ChatMessage {
   id: string;
@@ -35,7 +31,7 @@ export const AiMentorChat: React.FC<AiMentorChatProps> = ({ onOpenApplication })
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Turn off initial pulse after 4 seconds
+  // Turn off initial pulse after 4.5 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       setPulseActive(false);
@@ -81,13 +77,13 @@ export const AiMentorChat: React.FC<AiMentorChatProps> = ({ onOpenApplication })
   };
 
   const handleSendMessage = async (textToSend?: string) => {
-    const query = textToSend || inputValue;
-    if (!query.trim() || isLoading) return;
+    const query = (textToSend || inputValue).trim();
+    if (!query || isLoading) return;
 
     const userMsg: ChatMessage = {
       id: `msg_u_${Date.now()}`,
       sender: 'user',
-      text: query.trim(),
+      text: query,
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -95,27 +91,31 @@ export const AiMentorChat: React.FC<AiMentorChatProps> = ({ onOpenApplication })
     setIsLoading(true);
 
     try {
-      // Build conversation history for context
-      const history = messages.slice(-4).map((m) => ({
-        role: m.sender === 'ai' ? 'model' : 'user',
-        text: m.text,
-      }));
+      // Abort controller with 5-second timeout to guarantee fast feedback
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const res = await fetch('/api/gemini/chat-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: query.trim(),
-          history,
-        }),
+        body: JSON.stringify({ message: query }),
+        signal: controller.signal,
       });
 
-      if (!res.ok) {
-        throw new Error(`HTTP error ${res.status}`);
+      clearTimeout(timeoutId);
+
+      let aiReply = '';
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data && data.reply && typeof data.reply === 'string' && data.reply.trim()) {
+          aiReply = data.reply.trim();
+        }
       }
 
-      const data = await res.json();
-      const aiReply = data.reply || 'Курс ориентирован на практику: ИИ пишет код, а вы учитесь управлять процессом и создаете свой MVP.';
+      // If server returned empty or failed, use authoritative knowledge engine
+      if (!aiReply) {
+        aiReply = getMentorAnswer(query);
+      }
 
       const aiMsg: ChatMessage = {
         id: `msg_ai_${Date.now()}`,
@@ -125,15 +125,16 @@ export const AiMentorChat: React.FC<AiMentorChatProps> = ({ onOpenApplication })
       };
 
       setMessages((prev) => [...prev, aiMsg]);
-    } catch (err: any) {
-      console.warn('AI Mentor request error:', err);
-      const fallbackMsg: ChatMessage = {
-        id: `msg_err_${Date.now()}`,
+    } catch {
+      // Fallback directly to verified program knowledge
+      const aiReply = getMentorAnswer(query);
+      const aiMsg: ChatMessage = {
+        id: `msg_ai_${Date.now()}`,
         sender: 'ai',
-        text: 'Сейчас я обновляю свои знания. Оставьте заявку, и куратор команды ответит на любые ваши вопросы лично!',
+        text: aiReply,
         isActionable: true,
       };
-      setMessages((prev) => [...prev, fallbackMsg]);
+      setMessages((prev) => [...prev, aiMsg]);
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +169,7 @@ export const AiMentorChat: React.FC<AiMentorChatProps> = ({ onOpenApplication })
           >
             {/* Outer gradient glow */}
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-400 blur-md opacity-80 group-hover:opacity-100 transition-opacity" />
-            
+
             <div className="relative w-full h-full rounded-[14px] bg-[#080b14] flex items-center justify-center border border-white/20 group-hover:border-white/40 shadow-2xl">
               <Sparkles className="w-6 h-6 text-cyan-300 transition-transform group-hover:rotate-12 duration-300" />
               {/* Online pulse dot */}

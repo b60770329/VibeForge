@@ -8,6 +8,7 @@ import { OutcomeSection } from './components/OutcomeSection';
 import { VibeMvpGenerator } from './components/VibeMvpGenerator';
 import { ApplicationModal } from './components/ApplicationModal';
 import { UserDrawer } from './components/UserDrawer';
+import { AiMentorChat } from './components/AiMentorChat';
 import { Footer } from './components/Footer';
 import { Sparkles, ArrowUpRight } from 'lucide-react';
 
@@ -34,7 +35,7 @@ export default function App() {
   return (
     <AuthProvider>
       <div className="min-h-screen bg-[#07090e] text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
-        {/* Header */}
+        {/* Header with ScrollSpy and Trunk Test Active State */}
         <Header
           onOpenApplication={() => handleOpenApplication()}
           onOpenUserDrawer={() => setUserDrawerOpen(true)}
@@ -65,6 +66,9 @@ export default function App() {
         {/* Footer */}
         <Footer />
 
+        {/* Contextual AI Mentor Floating Assistant */}
+        <AiMentorChat onOpenApplication={handleOpenApplication} />
+
         {/* Modals & Drawers */}
         <ApplicationModal
           isOpen={isApplicationModalOpen}
@@ -78,7 +82,7 @@ export default function App() {
         />
 
         {/* Sticky Mobile Quick-Action Floating CTA Bar */}
-        <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden">
+        <div className="fixed bottom-4 left-4 right-4 z-30 md:hidden">
           <div className="p-2 rounded-2xl bg-[#090d18]/90 backdrop-blur-xl border border-white/15 shadow-2xl flex items-center justify-between gap-2">
             <button
               type="button"

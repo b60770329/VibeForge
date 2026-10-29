@@ -12,26 +12,40 @@ export const Header: React.FC<HeaderProps> = ({ onOpenApplication, onOpenUserDra
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('hero');
 
+  // ScrollSpy to track user position for the Trunk Test
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+
+      const sectionIds = ['hero', 'features', 'curriculum', 'outcome', 'generator'];
+      const scrollPosition = window.scrollY + 180;
+
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sectionIds[i]);
+        if (el && el.offsetTop <= scrollPosition) {
+          setActiveSection(sectionIds[i]);
+          break;
+        }
+      }
     };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
-    { name: 'Курс', href: '#hero' },
-    { name: 'Преимущества', href: '#features' },
-    { name: 'Программа', href: '#curriculum' },
-    { name: 'Результат', href: '#outcome' },
-    { name: 'AI Генератор', href: '#generator' },
+  // Course content anchors
+  const contentLinks = [
+    { name: 'Преимущества', href: '#features', id: 'features' },
+    { name: 'Программа', href: '#curriculum', id: 'curriculum' },
+    { name: 'Результат', href: '#outcome', id: 'outcome' },
   ];
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
         scrolled
           ? 'bg-[#07090e]/85 backdrop-blur-md border-b border-white/10 shadow-2xl shadow-cyan-950/20 py-3'
           : 'bg-transparent py-5'
@@ -59,17 +73,46 @@ export const Header: React.FC<HeaderProps> = ({ onOpenApplication, onOpenUserDra
             </div>
           </a>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1 bg-white/[0.03] border border-white/10 rounded-full px-4 py-1.5 backdrop-blur-md">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-sm font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-full transition-colors duration-200 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-cyan-400"
-              >
-                {link.name}
-              </a>
-            ))}
+          {/* Desktop Navigation: Clear Hierarchy (Course Content vs Functional Tool) */}
+          <nav className="hidden md:flex items-center gap-1 bg-white/[0.03] border border-white/10 rounded-full px-2 py-1 backdrop-blur-md">
+            {/* Group 1: Content Anchors */}
+            <div className="flex items-center gap-1">
+              {contentLinks.map((link) => {
+                const isActive = activeSection === link.id;
+                return (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    className={`relative text-xs font-medium px-3.5 py-1.5 rounded-full transition-all duration-200 focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                      isActive
+                        ? 'text-cyan-300 font-semibold bg-cyan-500/15 border border-cyan-500/30 shadow-sm shadow-cyan-500/20'
+                        : 'text-slate-300 hover:text-white hover:bg-white/5 border border-transparent'
+                    }`}
+                  >
+                    {link.name}
+                    {isActive && (
+                      <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 bg-cyan-400 rounded-full" />
+                    )}
+                  </a>
+                );
+              })}
+            </div>
+
+            {/* Visual Divider */}
+            <div className="h-4 w-px bg-white/15 mx-1" />
+
+            {/* Group 2: Functional Tool ("AI Генератор") with Sparkles */}
+            <a
+              href="#generator"
+              className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all duration-200 focus-visible:ring-2 focus-visible:ring-purple-400 ${
+                activeSection === 'generator'
+                  ? 'text-purple-200 font-semibold bg-purple-500/25 border border-purple-500/40 shadow-sm shadow-purple-500/20'
+                  : 'text-purple-300 hover:text-purple-200 bg-purple-950/40 hover:bg-purple-900/40 border border-purple-500/30'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+              <span>AI Генератор</span>
+            </a>
           </nav>
 
           {/* Desktop Actions */}
@@ -206,22 +249,22 @@ export const Header: React.FC<HeaderProps> = ({ onOpenApplication, onOpenUserDra
             </button>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Actions: Touch target at least 44x44px (iOS HIG) */}
           <div className="flex md:hidden items-center gap-2">
             {user && (
               <button
                 type="button"
                 onClick={onOpenUserDrawer}
-                className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-cyan-400"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-cyan-400"
                 aria-label="Личный кабинет"
               >
-                <Layers className="w-4 h-4" />
+                <Layers className="w-5 h-5" />
               </button>
             )}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl bg-white/[0.05] border border-white/10 text-slate-300 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl bg-white/[0.05] border border-white/10 text-slate-300 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
               aria-label={mobileMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -234,16 +277,37 @@ export const Header: React.FC<HeaderProps> = ({ onOpenApplication, onOpenUserDra
       {mobileMenuOpen && (
         <div className="md:hidden bg-[#07090e]/95 backdrop-blur-xl border-b border-white/10 px-4 pt-3 pb-6 space-y-3">
           <nav className="flex flex-col space-y-1">
-            {navLinks.map((link) => (
+            <a
+              href="#hero"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`px-3 py-2.5 text-base font-medium rounded-xl transition-colors ${
+                activeSection === 'hero' ? 'bg-cyan-500/15 text-cyan-300 font-bold' : 'text-slate-200 hover:bg-white/5'
+              }`}
+            >
+              Главная
+            </a>
+            {contentLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2.5 text-base font-medium text-slate-200 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                className={`px-3 py-2.5 text-base font-medium rounded-xl transition-colors ${
+                  activeSection === link.id ? 'bg-cyan-500/15 text-cyan-300 font-bold' : 'text-slate-200 hover:bg-white/5'
+                }`}
               >
                 {link.name}
               </a>
             ))}
+            <a
+              href="#generator"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-2 px-3 py-2.5 text-base font-medium rounded-xl transition-colors ${
+                activeSection === 'generator' ? 'bg-purple-500/20 text-purple-300 font-bold' : 'text-purple-300 hover:bg-purple-950/30'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-purple-400" />
+              <span>AI Генератор MVP</span>
+            </a>
           </nav>
 
           <div className="pt-3 border-t border-white/10 flex flex-col gap-2.5">
@@ -268,10 +332,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenApplication, onOpenUserDra
                     setMobileMenuOpen(false);
                     logout();
                   }}
-                  className="p-1.5 text-slate-400 hover:text-rose-400"
+                  className="p-2 text-slate-400 hover:text-rose-400"
                   aria-label="Выйти"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-5 h-5" />
                 </button>
               </div>
             ) : (
@@ -281,7 +345,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenApplication, onOpenUserDra
                   setMobileMenuOpen(false);
                   signInWithGoogle();
                 }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/[0.05] border border-white/15 text-sm font-medium text-white"
+                className="w-full min-h-[44px] flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/[0.05] border border-white/15 text-sm font-medium text-white"
               >
                 <UserIcon className="w-4 h-4 text-cyan-400" />
                 Войти через Google
@@ -294,7 +358,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenApplication, onOpenUserDra
                 setMobileMenuOpen(false);
                 onOpenApplication();
               }}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20"
+              className="w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20"
             >
               Начать творить
             </button>

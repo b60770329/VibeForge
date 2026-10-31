@@ -80,3 +80,43 @@ export interface UserProfile {
   photoURL?: string;
   createdAt: string;
 }
+
+export interface ProjectShowcaseItem {
+  id: string;
+  number: string;
+  stageName: string;
+  title: string;
+  tagline: string;
+  description: string;
+  objective: string;
+  deliverables: string[];
+  techFocus: string[];
+  durationWeeks: string;
+  badge: string;
+  color: 'cyan' | 'purple' | 'amber';
+}
+
+export interface MethodStepItem {
+  step: number;
+  title: string;
+  question: string;
+  description: string;
+  principle: string;
+  badge: string;
+}
+
+export interface VerificationLevelItem {
+  level: number;
+  title: string;
+  role: string;
+  points: string[];
+  statusNote: string;
+  accentColor: 'cyan' | 'purple' | 'emerald';
+}
+
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  category: 'about' | 'tech' | 'process' | 'price';
+}

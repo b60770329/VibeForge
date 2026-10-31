@@ -19,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenApplication, onOpenUserDra
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
 
-      const sectionIds = ['hero', 'features', 'curriculum', 'outcome', 'generator'];
+      const sectionIds = ['hero', 'features', 'projects', 'curriculum', 'methodology', 'outcome', 'generator', 'faq'];
       const scrollPosition = window.scrollY + 180;
 
       for (let i = sectionIds.length - 1; i >= 0; i--) {
@@ -39,8 +39,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenApplication, onOpenUserDra
   // Course content anchors
   const contentLinks = [
     { name: 'Преимущества', href: '#features', id: 'features' },
+    { name: '3 Проекта', href: '#projects', id: 'projects' },
     { name: 'Программа', href: '#curriculum', id: 'curriculum' },
+    { name: 'Методика', href: '#methodology', id: 'methodology' },
     { name: 'Результат', href: '#outcome', id: 'outcome' },
+    { name: 'FAQ', href: '#faq', id: 'faq' },
   ];
 
   return (

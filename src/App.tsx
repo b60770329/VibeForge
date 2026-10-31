@@ -3,9 +3,12 @@ import { AuthProvider } from './firebase/authContext';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Features } from './components/Features';
+import { ProjectShowcase } from './components/ProjectShowcase';
 import { Curriculum } from './components/Curriculum';
+import { VibeMethodology } from './components/VibeMethodology';
 import { OutcomeSection } from './components/OutcomeSection';
 import { VibeMvpGenerator } from './components/VibeMvpGenerator';
+import { FaqSection } from './components/FaqSection';
 import { ApplicationModal } from './components/ApplicationModal';
 import { UserDrawer } from './components/UserDrawer';
 import { AiMentorChat } from './components/AiMentorChat';
@@ -53,14 +56,23 @@ export default function App() {
           {/* Features Section («Почему Vibe Coding?») */}
           <Features />
 
-          {/* Curriculum Section («Краткий путь к MVP») */}
+          {/* Project Showcase Section (Раздел 6: 3 Обязательных проекта студента) */}
+          <ProjectShowcase onStartCreating={handleOpenApplication} />
+
+          {/* Curriculum Section («Программа курса: 6 модулей») */}
           <Curriculum />
 
-          {/* Outcome Section («Результат курса») */}
+          {/* Vibe Methodology Section (Разделы 7, 8, 10: 8 шагов с ИИ, 3 уровня проверки, безопасность) */}
+          <VibeMethodology />
+
+          {/* Outcome Section («Результат курса: 7 критериев MVP и архитектура») */}
           <OutcomeSection onStartCreating={() => handleOpenApplication()} />
 
           {/* Interactive AI Generator Section (Powered by Gemini) */}
           <VibeMvpGenerator />
+
+          {/* FAQ Section (Часто задаваемые вопросы и снятие возражений) */}
+          <FaqSection onOpenApplication={handleOpenApplication} />
         </main>
 
         {/* Footer */}

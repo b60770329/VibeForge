@@ -27,9 +27,12 @@ export const Footer: React.FC = () => {
   const navLinks = [
     { name: 'Курс', href: '#hero' },
     { name: 'Преимущества', href: '#features' },
+    { name: '3 Проекта', href: '#projects' },
     { name: 'Программа', href: '#curriculum' },
+    { name: 'Методика', href: '#methodology' },
     { name: 'Результат', href: '#outcome' },
     { name: 'AI Генератор', href: '#generator' },
+    { name: 'FAQ', href: '#faq' },
   ];
 
   return (

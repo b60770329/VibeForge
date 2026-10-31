@@ -92,19 +92,19 @@ export const Hero: React.FC<HeroProps> = ({
               </button>
             </div>
 
-            {/* Result highlights */}
+            {/* Result highlights / Course Passport */}
             <div className="pt-4 border-t border-white/10 grid grid-cols-3 gap-4 max-w-lg">
               <div>
-                <div className="text-xl sm:text-2xl font-bold font-mono text-cyan-300">100%</div>
-                <div className="text-xs text-slate-400 mt-0.5">Практика на реальном проекте</div>
+                <div className="text-xl sm:text-2xl font-bold font-mono text-cyan-300">3 проекта</div>
+                <div className="text-xs text-slate-300 mt-0.5 font-normal">Включая личный опубликованный MVP</div>
               </div>
               <div>
-                <div className="text-xl sm:text-2xl font-bold font-mono text-purple-300">6–8</div>
-                <div className="text-xs text-slate-400 mt-0.5">Недель от нуля до деплоя</div>
+                <div className="text-xl sm:text-2xl font-bold font-mono text-purple-300">6–8 недель</div>
+                <div className="text-xs text-slate-300 mt-0.5 font-normal">4–6 ч/нед (24–48 ч практики)</div>
               </div>
               <div>
-                <div className="text-xl sm:text-2xl font-bold font-mono text-emerald-300">1 MVP</div>
-                <div className="text-xs text-slate-400 mt-0.5">Личный продукт в портфолио</div>
+                <div className="text-xl sm:text-2xl font-bold font-mono text-emerald-300">С нуля</div>
+                <div className="text-xs text-slate-300 mt-0.5 font-normal">Без опыта в программировании</div>
               </div>
             </div>
           </div>
